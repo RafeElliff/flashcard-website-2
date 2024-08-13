@@ -10,3 +10,6 @@ class NewCardForm(Form):
     Term = StringField("Term")
     Definition = StringField("Definition")
     Submit = SubmitField("Submit")
+
+class SubmitForm(Form):
+    Submit = SubmitField("Submit")

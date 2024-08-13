@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify, session
-from forms import NewSetForm, NewCardForm
+from forms import NewSetForm, NewCardForm, SubmitForm
 import os
 from dotenv import load_dotenv
 app = Flask(__name__)
@@ -11,7 +11,7 @@ app.secret_key = os.getenv("flask_secret_key")
 
 import json
 
-class Flashcard_set:
+class FlashcardSet:
     def __init__(self, name, flashcards_list):
         self.name = name
         if flashcards_list:
@@ -66,39 +66,64 @@ class Flashcard:
 def clear_session():
     session.clear()
     session["Set"] = None
+
+
+def add_new_card_set(card_set):
+    with open("flashcard_sets.txt", "r") as file:
+        lines = file.readlines()
+    with open("flashcard_sets.txt", "w") as file:
+        lines.append(card_set)
+        for line in lines:
+            file.write(line.strip("\n"))
+            file.write("\n")
+
 @app.route('/')
 def index():
     clear_session()
     return render_template("index.html")
+
+def get_list_of_card_sets():
+    names = []
+    with open("flashcard_sets.txt", "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            flashcard_set = FlashcardSet.out_of_json(line)
+            name = flashcard_set.name
+            names.append(name)
+    return names
 
 @app.route('/initialise_new_set', methods = ["GET", "POST"])
 def initialise_new_set():
     form = NewSetForm(request.form)
     if request.method == "POST":
         name = request.form["Name"]
-        session["Set"] = Flashcard_set(name, []).into_json()
+        session["Flashcard Set"] = FlashcardSet(name, []).into_json()
         return redirect(url_for("add_new_flashcard"))
     return render_template("initialise_new_set.html", form=form)
 
 @app.route("/add_new_flashcard", methods = ["GET","POST"])
 def add_new_flashcard():
-    form = NewCardForm(request.form)
-    set_json = session.get("Set")
-    set = Flashcard_set.out_of_json(set_json)
-    name = set.name
+    new_card_form = NewCardForm(request.form)
+    set_json = session.get("Flashcard Set")
+    flashcard_set = FlashcardSet.out_of_json(set_json)
+    name = flashcard_set.name
     if request.method == "POST":
         term = request.form["Term"]
         definition = request.form["Definition"]
         flashcard = Flashcard(term, definition, 0, 0)
-        set.add_new_card(flashcard)
-        print(set)
-        session["Set"] = set.into_json()
+        flashcard_set.add_new_card(flashcard)
+        session["Flashcard Set"] = flashcard_set.into_json()
 
         return redirect(url_for("add_new_flashcard"))
 
 
-    return render_template("add_new_flashcard.html", set=name, form=form)
+    return render_template("add_new_flashcard.html", name=name, form=new_card_form)
 
+@app.route("/finish_set")
+def finish_set():
+    finished_set = session.get("Flashcard Set")
+    add_new_card_set(finished_set)
+    return redirect(url_for("index"))
 @app.route('/edit_set')
 def edit_set():
     return render_template("edit_set.html")
@@ -106,6 +131,11 @@ def edit_set():
 @app.route('/study_set')
 def study_set():
     return render_template("study_set.html")
+
+@app.route('/debugging_features')
+def debugging_features_():
+    print(get_list_of_card_sets())
+    return render_template("debugging_features.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

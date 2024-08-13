@@ -1,0 +1,4 @@
+{"name": "fsd", "flashcards_list": ["{\"term\": \"aw\", \"definition\": \"w\", \"learn_score\": 0, \"times_seen\": 0}"]}
+{"name": "ds", "flashcards_list": ["{\"term\": \"vcx\", \"definition\": \"xv\", \"learn_score\": 0, \"times_seen\": 0}"]}
+{"name": "gd", "flashcards_list": ["{\"term\": \"wer\", \"definition\": \"erw\", \"learn_score\": 0, \"times_seen\": 0}"]}
+{"name": "s", "flashcards_list": ["{\"term\": \"cv\", \"definition\": \"vc\", \"learn_score\": 0, \"times_seen\": 0}"]}
