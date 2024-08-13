@@ -13,3 +13,10 @@ class NewCardForm(Form):
 
 class SubmitForm(Form):
     Submit = SubmitField("Submit")
+
+class ChooseSetForm(Form):
+    Choice = SelectField("Choose a flashcard set", choices=[])
+    Submit = SubmitField("Submit")
+
+
+

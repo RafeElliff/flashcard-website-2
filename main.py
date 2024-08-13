@@ -1,15 +1,14 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify, session
-from forms import NewSetForm, NewCardForm, SubmitForm
+from flask import Flask, request, render_template, redirect, url_for, session
+from forms import NewSetForm, NewCardForm, ChooseSetForm
 import os
 from dotenv import load_dotenv
+import json
 app = Flask(__name__)
 
 load_dotenv()
 
 app.secret_key = os.getenv("flask_secret_key")
 
-
-import json
 
 class FlashcardSet:
     def __init__(self, name, flashcards_list):
@@ -128,9 +127,24 @@ def finish_set():
 def edit_set():
     return render_template("edit_set.html")
 
-@app.route('/study_set')
+@app.route('/study_set', methods = ["GET", "POST"])
 def study_set():
-    return render_template("study_set.html")
+    choices = []
+    flashcard_sets = get_list_of_card_sets()
+    for flashcard_set in flashcard_sets:
+        string = (flashcard_set, flashcard_set)
+        choices.append(string)
+    form = ChooseSetForm(request.form)
+    form.Choice.choices = choices
+
+    if request.method == "POST":
+        choice = request.form["Choice"]
+        session["Chosen Set"] = choice
+        print(session.get("Chosen Set"))
+        return redirect(url_for("index"))
+
+
+    return render_template("study_set.html", form=form)
 
 @app.route('/debugging_features')
 def debugging_features_():
