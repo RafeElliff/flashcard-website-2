@@ -241,6 +241,7 @@ def study_set():
             last_card.incorrect_answer()
         new_card_set = card_set.update_card(last_card)
         update_card_sets(new_card_set)
+        redirect(url_for("study_set"))
 
     chosen_card = card_set.get_card_to_study()
     term = chosen_card.term
