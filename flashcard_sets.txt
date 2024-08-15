@@ -1,4 +1,2 @@
-{"name": "fsd", "flashcards_list": ["{\"term\": \"aw\", \"definition\": \"w\", \"learn_score\": 0, \"times_seen\": 0}"]}
-{"name": "ds", "flashcards_list": ["{\"term\": \"vcx\", \"definition\": \"xv\", \"learn_score\": 0, \"times_seen\": 0}"]}
-{"name": "gd", "flashcards_list": ["{\"term\": \"wer\", \"definition\": \"erw\", \"learn_score\": 0, \"times_seen\": 0}"]}
-{"name": "s", "flashcards_list": ["{\"term\": \"cv\", \"definition\": \"vc\", \"learn_score\": 0, \"times_seen\": 0}"]}
+{"name": "1", "flashcards_list": ["{\"term\": \"1\", \"definition\": \"2\", \"learn_score\": 1, \"times_seen\": 27}", "{\"term\": \"3\", \"definition\": \"4\", \"learn_score\": 10, \"times_seen\": 13}"]}
+{"name": "2", "flashcards_list": ["{\"term\": \"1\", \"definition\": \"4\", \"learn_score\": 3, \"times_seen\": 0}", "{\"term\": \"4\", \"definition\": \"4\", \"learn_score\": 3, \"times_seen\": 0}"]}

@@ -18,5 +18,9 @@ class ChooseSetForm(Form):
     Choice = SelectField("Choose a flashcard set", choices=[])
     Submit = SubmitField("Submit")
 
+class StudySetForm(Form):
+    Answer = StringField("Answer")
+    Submit = SubmitField("Submit")
+
 
 
