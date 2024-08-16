@@ -94,7 +94,12 @@ class Flashcard:
         return cls(term=data["term"], definition=data["definition"], learn_score=data["learn_score"],
                    times_seen=data["times_seen"])
 
-
+def write_from_f_to_f(file1, file2):
+    with open(file1, "r") as file:
+        lines = file.readlines()
+    with open(file2, "w") as file:
+        for line in lines:
+            file.write(line.strip("\n") + "\n")
 def is_valid_json(string):
     try:
         json.loads(string)
@@ -232,8 +237,9 @@ def mark_as_correct():
     card_set = get_flashcard_set_from_json()
     new_card_set = card_set.update_card(card_to_change)
     update_card_sets(new_card_set)
-    session["Changed Card"] = card_to_change.into_json()
+    session["Last Card"] = card_to_change.into_json()
     return redirect(url_for("study_set"))
+
 
 @app.route("/study_set", methods = ["GET", "POST"])
 def study_set():
@@ -246,9 +252,7 @@ def study_set():
     if session.get("Last Card"):
         last_card = Flashcard.out_of_json(session.get("Last Card"))
         session["card to change in mark_as_correct"] =last_card.into_json()
-        if session.get("Changed Card"):
-            session["Changed Card"] = None
-            last_card = Flashcard.out_of_json(session.get("Changed Card"))
+
     if request.method == "POST" and last_card:
         answer = request.form["Answer"]
         if last_card.definition == answer:
@@ -266,17 +270,12 @@ def study_set():
     chosen_card = card_set.get_card_to_study()
     term = chosen_card.term
     session["Last Card"] = chosen_card.into_json()
-
-
-
     return render_template("study_set.html", study_set_form=study_set_form, term=term, message = message, correct = correct)
 
 @app.route('/debugging_features')
 def debugging_features_():
-    card_set = get_flashcard_set_from_json()
-    choice = card_set.get_card_to_study()
-
-    return render_template("debugging_features.html")
+    write_from_f_to_f("flashcard_sets_backup.txt", "flashcard_sets.txt")
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     app.run(debug=True)

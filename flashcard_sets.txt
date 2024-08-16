@@ -1,2 +1,2 @@
-{"name": "1", "flashcards_list": ["{\"term\": \"1\", \"definition\": \"2\", \"learn_score\": 10, \"times_seen\": 1}", "{\"term\": \"3\", \"definition\": \"4\", \"learn_score\": 10, \"times_seen\": 2}"]}
-{"name": "2", "flashcards_list": ["{\"term\": \"1\", \"definition\": \"4\", \"learn_score\": 3, \"times_seen\": 0}", "{\"term\": \"4\", \"definition\": \"4\", \"learn_score\": 10, \"times_seen\": 1}"]}
+{"name": "1", "flashcards_list": ["{\"term\": \"1\", \"definition\": \"2\", \"learn_score\": 10, \"times_seen\": 1}", "{\"term\": \"3\", \"definition\": \"4\", \"learn_score\": 3, \"times_seen\": 2}"]}
+{"name": "2", "flashcards_list": ["{\"term\": \"1\", \"definition\": \"4\", \"learn_score\": 3, \"times_seen\": 0}", "{\"term\": \"4\", \"definition\": \"4\", \"learn_score\": 3, \"times_seen\": 0}"]}
