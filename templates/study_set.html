@@ -13,6 +13,11 @@
     {{form.Answer}}
     {{form.Submit}}
 </form>
-<br> <a href = "index"> Finish Session</a>
+{% if message %}
+{{message | replace ("\n", "<br>")|safe}}
+{% endif %}
+<br> <a href = "/"> Finish Session</a>
+
+
 </body>
 </html>

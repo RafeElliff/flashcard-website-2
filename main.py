@@ -228,6 +228,7 @@ def choose_set():
 @app.route("/study_set", methods = ["GET", "POST"])
 def study_set():
     last_card = None
+    message = None
     form = StudySetForm(request.form)
     card_set = get_flashcard_set_from_json()
 
@@ -237,8 +238,10 @@ def study_set():
         answer = request.form["Answer"]
         if last_card.definition == answer:
             last_card.correct_answer()
+            message = f"That was the correct answer, the answer was {last_card.definition}"
         else:
             last_card.incorrect_answer()
+            message = f"That was incorrect, the answer was: \n {last_card.definition}\n Your answer was \n {answer}"
         new_card_set = card_set.update_card(last_card)
         update_card_sets(new_card_set)
         redirect(url_for("study_set"))
@@ -248,7 +251,7 @@ def study_set():
     session["Last Card"] = chosen_card.into_json()
 
 
-    return render_template("study_set.html", form=form, term=term)
+    return render_template("study_set.html", form=form, term=term, message = message)
 
 @app.route('/debugging_features')
 def debugging_features_():
