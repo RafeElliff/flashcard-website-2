@@ -3,21 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 {{term}}
 <br>
 <form
-    method = "POST", action = "">
-    {{form.Answer.label}}
-    {{form.Answer}}
-    {{form.Submit}}
+    method = "POST" action = "">
+    {{study_set_form.Answer.label}}
+    {{study_set_form.Answer}}
+    {{study_set_form.Submit}}
 </form>
 {% if message %}
 {{message | replace ("\n", "<br>")|safe}}
 {% endif %}
+<br> <button id = "mark_as_correct_button"> I was right</button>
 <br> <a href = "/"> Finish Session</a>
 
+<script>
+    {% if correct is defined %}
+        var correct = {{correct | tojson}}
+    {% endif %}
+    var button = document.getElementById("mark_as_correct_button")
+    if (correct === true) {
+        button.disabled = true;
+    }
+    $(document).ready(function() {
+        $("#mark_as_correct_button").on('click', function(e) {
+            e.preventDefault();
+            $(this).prop('disabled', true);
+            const data = {button_clicked: true};
 
+            $.ajax({
+                type: "POST",
+                url: "/mark_as_correct",
+                contentType: "application/json",
+                data: JSON.stringify(data)
+            });
+        });
+    })
+</script>
 </body>
 </html>

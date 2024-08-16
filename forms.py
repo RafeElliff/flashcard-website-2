@@ -11,8 +11,8 @@ class NewCardForm(Form):
     Definition = StringField("Definition")
     Submit = SubmitField("Submit")
 
-class SubmitForm(Form):
-    Submit = SubmitField("Submit")
+class ChangeScoreForm(Form):
+    Submit = SubmitField("I Was Right")
 
 class ChooseSetForm(Form):
     Choice = SelectField("Choose a flashcard set", choices=[])

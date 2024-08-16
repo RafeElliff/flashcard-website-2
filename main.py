@@ -77,8 +77,11 @@ class Flashcard:
         self.times_seen = self.times_seen + 1
 
     def incorrect_answer(self):
-        self.learn_score = max(self.learn_score - 1, 0)
-        self.times_seen = self.times_seen + 1
+        if self.learn_score == 10:
+            self.learn_score = 5
+        else:
+            self.learn_score = max(self.learn_score - 1, 0)
+            self.times_seen = self.times_seen + 1
 
     def into_json(self):
         as_dict = self.__dict__
@@ -114,10 +117,6 @@ def get_flashcard_set_from_json():
 def read_lines(filename):
     with open(filename, "r") as file:
         return file.readlines()
-
-def clear_session():
-    session.clear()
-
 
 def add_new_card_set(card_set):
     with open("flashcard_sets.txt", "r") as file:
@@ -225,22 +224,40 @@ def choose_set():
 
     return render_template("choose_set.html", form=form)
 
+
+@app.route("/mark_as_correct", methods=["GET", "POST"])
+def mark_as_correct():
+    card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
+    card_to_change.correct_answer()
+    card_set = get_flashcard_set_from_json()
+    new_card_set = card_set.update_card(card_to_change)
+    update_card_sets(new_card_set)
+    session["Changed Card"] = card_to_change.into_json()
+    return redirect(url_for("study_set"))
+
 @app.route("/study_set", methods = ["GET", "POST"])
 def study_set():
     last_card = None
+    correct = True
     message = None
-    form = StudySetForm(request.form)
+    study_set_form = StudySetForm(request.form)
     card_set = get_flashcard_set_from_json()
 
     if session.get("Last Card"):
         last_card = Flashcard.out_of_json(session.get("Last Card"))
+        session["card to change in mark_as_correct"] =last_card.into_json()
+        if session.get("Changed Card"):
+            session["Changed Card"] = None
+            last_card = Flashcard.out_of_json(session.get("Changed Card"))
     if request.method == "POST" and last_card:
         answer = request.form["Answer"]
         if last_card.definition == answer:
+            correct = True
             last_card.correct_answer()
             message = f"That was the correct answer, the answer was {last_card.definition}"
         else:
             last_card.incorrect_answer()
+            correct = False
             message = f"That was incorrect, the answer was: \n {last_card.definition}\n Your answer was \n {answer}"
         new_card_set = card_set.update_card(last_card)
         update_card_sets(new_card_set)
@@ -251,7 +268,8 @@ def study_set():
     session["Last Card"] = chosen_card.into_json()
 
 
-    return render_template("study_set.html", form=form, term=term, message = message)
+
+    return render_template("study_set.html", study_set_form=study_set_form, term=term, message = message, correct = correct)
 
 @app.route('/debugging_features')
 def debugging_features_():
