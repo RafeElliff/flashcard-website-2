@@ -4,12 +4,15 @@ import os
 from dotenv import load_dotenv
 import json
 import random
+import logging
 
 app = Flask(__name__)
 
 load_dotenv()
 
 app.secret_key = os.getenv("flask_secret_key")
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class FlashcardSet:
@@ -36,13 +39,13 @@ class FlashcardSet:
         for card in self.flashcards_list:
             valid_cards.append(card)
             card = Flashcard.out_of_json(card)
-            if card.times_seen == 0:
-                not_seen_before_cards.append(card.into_json())
+            # if card.times_seen == 0:
+            #     not_seen_before_cards.append(card.into_json())
             weightings.append(11 - (card.learn_score))
-        if not_seen_before_cards:
-            return Flashcard.out_of_json(random.choice(not_seen_before_cards))
-        else:
-            choices = random.choices(valid_cards, weightings, k=1)
+        # if not_seen_before_cards:
+        #     return Flashcard.out_of_json(random.choice(not_seen_before_cards))
+        # else:
+        choices = random.choices(valid_cards, weightings, k=1)
         return Flashcard.out_of_json(choices[0])
 
     def __repr__(self):
@@ -274,15 +277,15 @@ def choose_set():
     return render_template("choose_set.html", form=form)
 
 
-@app.route("/mark_as_correct", methods=["GET", "POST"])
-def mark_as_correct():
-    card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
-    card_to_change.correct_answer()
-    card_set = get_flashcard_set_from_json()
-    new_card_set = card_set.update_card(card_to_change)
-    update_card_sets(new_card_set)
-    session["Last Card"] = card_to_change.into_json()
-    return redirect(url_for("study_set"))
+# @app.route("/mark_as_correct", methods=["GET", "POST"])
+# def mark_as_correct():
+#     card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
+#     card_to_change.correct_answer()
+#     card_set = get_flashcard_set_from_json()
+#     new_card_set = card_set.update_card(card_to_change)
+#     update_card_sets(new_card_set)
+#     session["Last Card"] = card_to_change.into_json()
+#     return redirect(url_for("study_set"))
 
 
 @app.route("/study_set", methods=["GET", "POST"])
@@ -296,24 +299,40 @@ def study_set():
     if session.get("Last Card"):
         last_card = Flashcard.out_of_json(session.get("Last Card"))
         session["card to change in mark_as_correct"] = last_card.into_json()
+        logging.debug(f"last card = {last_card}")
+    if request.method == "POST":
+        if request.is_json:
+            card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
+            card_to_change.correct_answer()
+            card_set = get_flashcard_set_from_json()
+            new_card_set = card_set.update_card(card_to_change)
+            update_card_sets(new_card_set)
+            session["Last Card"] = card_to_change.into_json()
 
-    if request.method == "POST" and last_card:
-        answer = request.form["Answer"]
-        if last_card.definition == answer:
-            correct = True
-            last_card.correct_answer()
-            message = f"That was the correct answer, the answer was {last_card.definition}"
-        else:
-            last_card.incorrect_answer()
-            correct = False
-            message = f"That was incorrect, the answer was: \n {last_card.definition}\n Your answer was \n {answer}"
-        new_card_set = card_set.update_card(last_card)
-        update_card_sets(new_card_set)
+        elif last_card:
+            answer = request.form["Answer"]
+            if last_card.definition == answer:
+                correct = True
+                last_card.correct_answer()
+                message = f"That was the correct answer, the answer was {last_card.definition}"
+            else:
+                last_card.incorrect_answer()
+                correct = False
+                message = f"That was incorrect. The term was: \n {last_card.term}\n the answer was: \n {last_card.definition}\n Your answer was \n {answer}"
+            new_card_set = card_set.update_card(last_card)
+            update_card_sets(new_card_set)
 
-    chosen_card = card_set.get_card_to_study()
-    term = chosen_card.term
-    session["Last Card"] = chosen_card.into_json()
-    study_set_form.Answer.data = ""
+            chosen_card = card_set.get_card_to_study()
+            term = chosen_card.term
+            logging.debug(f"term passed into term=term: {term}")
+            session["Last Card"] = chosen_card.into_json()
+            study_set_form.Answer.data = ""
+    else:
+        chosen_card = card_set.get_card_to_study()
+        term = chosen_card.term
+        logging.debug(f"term passed into term=term: {term}")
+        session["Last Card"] = chosen_card.into_json()
+        study_set_form.Answer.data = ""
     return render_template("study_set.html", study_set_form=study_set_form, term=term, message=message, correct=correct)
 
 
