@@ -184,6 +184,9 @@ def update_card_sets(new_flashcard_set):
 
 def initialise():
     session.clear()
+    with open("terms and definitions/set_currently_being_created", "w"):
+        pass
+
 
 
 @app.route('/')
@@ -197,7 +200,8 @@ def initialise_new_set():
     form = NewSetForm(request.form)
     if request.method == "POST":
         name = request.form["Name"]
-        session["Flashcard Set"] = FlashcardSet(name, []).into_json()
+        with open("terms and definitions/set_currently_being_created", "w") as file:
+            file.write(FlashcardSet(name, []).into_json())
         return redirect(url_for("add_new_flashcard"))
     return render_template("initialise_new_set.html", form=form)
 
@@ -223,8 +227,9 @@ def add_new_flashcard():
 
 @app.route("/create_cards_from_files")
 def create_cards_from_files():
-    flashcard_set_json = session.get("Flashcard Set")
-    flashcard_set = FlashcardSet.out_of_json(flashcard_set_json)
+    with open("terms and definitions/set_currently_being_created", "r") as file:
+        set_json = file.read()
+    flashcard_set = FlashcardSet.out_of_json(set_json)
     with open("terms and definitions/terms.txt", "r") as file:
         terms = file.readlines()
     with open("terms and definitions/definitions.txt", "r") as file:
@@ -252,8 +257,6 @@ def finish_set():
             finished_set = file.read()
     add_new_card_set(finished_set)
     return redirect(url_for("index"))
-
-
 @app.route('/edit_set')
 def edit_set():
     return render_template("edit_set.html")
@@ -277,17 +280,6 @@ def choose_set():
     return render_template("choose_set.html", form=form)
 
 
-# @app.route("/mark_as_correct", methods=["GET", "POST"])
-# def mark_as_correct():
-#     card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
-#     card_to_change.correct_answer()
-#     card_set = get_flashcard_set_from_json()
-#     new_card_set = card_set.update_card(card_to_change)
-#     update_card_sets(new_card_set)
-#     session["Last Card"] = card_to_change.into_json()
-#     return redirect(url_for("study_set"))
-
-
 @app.route("/study_set", methods=["GET", "POST"])
 def study_set():
     last_card = None
@@ -302,8 +294,10 @@ def study_set():
         logging.debug(f"last card = {last_card}")
     if request.method == "POST":
         if request.is_json:
-            card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
+            # card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
+            card_to_change = last_card
             card_to_change.correct_answer()
+            logging.debug(f"card to change with AJAX = {card_to_change}")
             card_set = get_flashcard_set_from_json()
             new_card_set = card_set.update_card(card_to_change)
             update_card_sets(new_card_set)
@@ -321,11 +315,9 @@ def study_set():
                 message = f"That was incorrect. The term was: \n {last_card.term}\n the answer was: \n {last_card.definition}\n Your answer was \n {answer}"
             new_card_set = card_set.update_card(last_card)
             update_card_sets(new_card_set)
-
             chosen_card = card_set.get_card_to_study()
             term = chosen_card.term
             logging.debug(f"term passed into term=term: {term}")
-            session["Last Card"] = chosen_card.into_json()
             study_set_form.Answer.data = ""
     else:
         chosen_card = card_set.get_card_to_study()
