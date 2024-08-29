@@ -121,7 +121,6 @@ def is_valid_json(string):
 
 
 def get_flashcard_set_from_json():
-    flashcard_sets = None
     chosen_set = session.get("Chosen Set")
     with open("flashcard set data/flashcard_sets.txt", "r") as file:
         flashcard_sets = file.readlines()
@@ -188,7 +187,6 @@ def initialise():
         pass
 
 
-
 @app.route('/')
 def index():
     initialise()
@@ -225,6 +223,7 @@ def add_new_flashcard():
 
     return render_template("add_new_flashcard.html", name=name, form=new_card_form)
 
+
 @app.route("/create_cards_from_files")
 def create_cards_from_files():
     with open("terms and definitions/set_currently_being_created", "r") as file:
@@ -234,7 +233,7 @@ def create_cards_from_files():
         terms = file.readlines()
     with open("terms and definitions/definitions.txt", "r") as file:
         definitions = file.readlines()
-    for index in range (0, min(len(terms), len(definitions))):
+    for index in range(0, min(len(terms), len(definitions))):
         term = terms[index].strip("\n")
         definition = definitions[index].strip("\n")
         new_flashcard = Flashcard(term, definition, 3, 0)
@@ -257,14 +256,30 @@ def finish_set():
             finished_set = file.read()
     add_new_card_set(finished_set)
     return redirect(url_for("index"))
-@app.route('/edit_set')
+
+
+@app.route('/edit_set', methods=["GET", "POST"])
 def edit_set():
+
     return render_template("edit_set.html")
+
+@app.route("/reset_set_progress")
+def reset_set_progress():
+    chosen_set = get_flashcard_set_from_json()
+    for index in range(0, len(chosen_set.flashcards_list)):
+        flashcard = Flashcard.out_of_json(chosen_set.flashcards_list[index])
+        flashcard.learn_score = 3
+        flashcard.times_seen = 0
+        chosen_set.flashcards_list[index] = flashcard.into_json()
+    update_card_sets(chosen_set)
+    return redirect(url_for("edit_set"))
+
 
 
 @app.route('/choose_set', methods=["GET", "POST"])
 def choose_set():
     choices = []
+    form_action = ""
     flashcard_sets = get_list_of_card_sets()
     for flashcard_set in flashcard_sets:
         string = (flashcard_set, flashcard_set)
@@ -275,9 +290,26 @@ def choose_set():
     if request.method == "POST":
         choice = request.form["Choice"]
         session["Chosen Set"] = choice
-        return redirect(url_for("study_set"))
+        logging.debug(f"choice = {choice}")
 
-    return render_template("choose_set.html", form=form)
+        if session.get("Origin") == "Study":
+            return redirect(url_for("study_set"))
+        elif session.get("Origin") == "Edit":
+            return redirect(url_for("edit_set"))
+    return render_template("choose_set.html", form=form, form_action=form_action)
+
+
+@app.route("/set_origin_as_study")
+def set_origin_as_study():
+    session["Origin"] = "Study"
+    session["Flag Variable"] = True
+    return redirect(url_for("choose_set"))
+
+
+@app.route("/set_origin_as_edit")
+def set_origin_as_edit():
+    session["Origin"] = "Edit"
+    return redirect(url_for("choose_set"))
 
 
 @app.route("/study_set", methods=["GET", "POST"])
@@ -292,6 +324,7 @@ def study_set():
         last_card = Flashcard.out_of_json(session.get("Last Card"))
         session["card to change in mark_as_correct"] = last_card.into_json()
         logging.debug(f"last card = {last_card}")
+
     if request.method == "POST":
         if request.is_json:
             # card_to_change = Flashcard.out_of_json(session.get("card to change in mark_as_correct"))
@@ -302,6 +335,7 @@ def study_set():
             new_card_set = card_set.update_card(card_to_change)
             update_card_sets(new_card_set)
             session["Last Card"] = card_to_change.into_json()
+            pass
 
         elif last_card:
             answer = request.form["Answer"]
@@ -319,12 +353,16 @@ def study_set():
             term = chosen_card.term
             logging.debug(f"term passed into term=term: {term}")
             study_set_form.Answer.data = ""
+            session["Last Card"] = chosen_card.into_json()
     else:
+        logging.debug(f"card_set = {card_set}")
         chosen_card = card_set.get_card_to_study()
         term = chosen_card.term
         logging.debug(f"term passed into term=term: {term}")
         session["Last Card"] = chosen_card.into_json()
         study_set_form.Answer.data = ""
+
+
     return render_template("study_set.html", study_set_form=study_set_form, term=term, message=message, correct=correct)
 
 
